@@ -1,0 +1,68 @@
+service: lambda-kittens-app
+
+provider:
+    name: aws
+    runtime: nodejs12.x
+
+iamRoleStatements:
+    - Effect: 'Allow'
+      Action:
+          - dynamodb:PutItem
+          - dynamodb:Scan*
+          - dynamodb:GetItem
+          - dynamodb:UpdateItem
+          - dynamodb:DeleteItem
+      Resource: arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/${self:service}-kittens-${opt:stage}
+
+environment:
+    DYNAMODB_KITTEN_TABLE: ${self:service}-kittens-${opt:stage}
+functions:
+    create:
+        handler: handler.createKitten
+        events:
+            - http:
+                  path: /v1/kitten
+                  method: post
+    list:
+        handler: handler.listKitten
+        events:
+            - http:
+                  path: /v1/kitten
+                  method: get
+    get:
+        handler: handler.getKitten
+        events:
+            - http:
+                  path: /v1/kitten/{name}
+                  method: get
+    update:
+        handler: handler.updateKitten
+        events:
+            - http:
+                  path: /v1/kitten/{name}
+                  method: patch
+    delete:
+        handler: handler.deleteKitten
+        events:
+            - http:
+                  path: /v1/kitten/{name}
+                  method: delete
+resources:
+    Resources:
+        kittensTable:
+            Type: 'AWS::DynamoDB::Table'
+            Properties:
+                TableName: ${self:service}-kittens-${opt:stage}
+                AttributeDefinitions:
+                    - AttributeName: name
+                      AttributeType: S
+                KeySchema:
+                    - AttributeName: name
+                      KeyType: HASH
+                BillingMode: PAY_PER_REQUEST
+Plugins:
+    - serverless-pseudo-parameters
+#  Outputs:
+#     NewOutput:
+#       Description: "Description for the output"
+#       Value: "Some output value"
