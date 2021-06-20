@@ -3,6 +3,8 @@ service: lambda-kittens-app
 provider:
     name: aws
     runtime: nodejs12.x
+    environment:
+        DYNAMODB_KITTEN_TABLE: ${self:service}-kittens-${opt:stage}
 
 iamRoleStatements:
     - Effect: 'Allow'
@@ -14,8 +16,7 @@ iamRoleStatements:
           - dynamodb:DeleteItem
       Resource: arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/${self:service}-kittens-${opt:stage}
 
-environment:
-    DYNAMODB_KITTEN_TABLE: ${self:service}-kittens-${opt:stage}
+
 functions:
     create:
         handler: handler.createKitten
